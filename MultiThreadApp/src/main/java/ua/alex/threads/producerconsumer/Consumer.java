@@ -14,8 +14,7 @@ public class Consumer implements Runnable {
 	public void run() {
 		while (true) {
 			try {				
-				consume();
-				//Thread.sleep(15);
+				consume();				
 			} catch (InterruptedException ex) {
 				//
 			}

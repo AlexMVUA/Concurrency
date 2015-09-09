@@ -51,12 +51,14 @@ public class AnotherThreadPool {
 						try {
 							System.out.println("busy:" + Thread.currentThread().getName());
 							taskQueue.wait();							
-						} catch (InterruptedException e) {							
+						} catch (InterruptedException e) {	
+							e.printStackTrace();;
 						}					
 					}
 					try {
 						Thread.sleep(new Random().nextInt(2000));
 					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
 					r = taskQueue.remove(0);
 				}
@@ -65,6 +67,7 @@ public class AnotherThreadPool {
 					r.run();
 					System.out.println("Finishes work: " + Thread.currentThread().getName());
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 			

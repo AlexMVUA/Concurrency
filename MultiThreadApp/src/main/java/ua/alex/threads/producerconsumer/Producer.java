@@ -37,7 +37,6 @@ public class Producer implements Runnable {
 			}
 			count++;	
 			sharedQueue.add(i);	
-
 			StringBuilder sb = new StringBuilder();
 			sb.append("Produced by ");
 			sb.append(Thread.currentThread().getName());
