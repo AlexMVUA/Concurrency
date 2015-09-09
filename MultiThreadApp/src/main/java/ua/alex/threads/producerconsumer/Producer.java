@@ -18,7 +18,7 @@ public class Producer implements Runnable {
 		while (true) {
 			try {
 				produce(count);
-				
+
 			} catch (InterruptedException ex) {
 
 			}
@@ -26,12 +26,13 @@ public class Producer implements Runnable {
 		}
 	}
 
-	 private synchronized void produce(int i) throws InterruptedException {	
+	private synchronized void produce(int i) throws InterruptedException {	
+		synchronized(sharedQueue) {			 
 			if (sharedQueue.size() == SIZE ) {
 				System.out.println("Queue is full " + Thread.currentThread().getName()
 						+ " is waiting , size: " + sharedQueue.size());
 				while (sharedQueue.size() == SIZE) {
-					wait();
+					sharedQueue.wait();
 				}				
 			}
 			count++;	
@@ -45,8 +46,9 @@ public class Producer implements Runnable {
 			sb.append(". Queue size: ");
 			sb.append(sharedQueue.size());			
 			System.out.println(sb.toString());
-			this.notifyAll();
+
+			sharedQueue.notifyAll();
 		}
-	
+	}
 
 }
