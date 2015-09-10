@@ -1,49 +1,44 @@
 package ua.alex.threads.threadpool;
 
-import java.util.List;
 
 public class WorkerThread implements Runnable {
+
+	private MyQueue<Runnable> taskQueue;	
+	private Thread thread;
+	private volatile boolean running = false;
 	
-	List<Runnable> taskQueue;	
 	
 	public WorkerThread() {
-		
+		this.thread = new Thread(this);
 	}
-	
-	public WorkerThread(List<Runnable> taskQueue) {
+
+	public WorkerThread(MyQueue<Runnable> taskQueue) {
+		this.thread = new Thread(this);
 		System.out.println("Created: " + Thread.currentThread().getName());
 		this.taskQueue = taskQueue;
 	}
-	
-	public void enqueue(Runnable r) {
-		synchronized(taskQueue) {
-			taskQueue.add(r);
-			taskQueue.notify();
-		}
-	}
-	
+
 	@Override
 	public void run() {
 		Runnable r;
-		while(true) {
-			synchronized(taskQueue) {
-				while (taskQueue.isEmpty()) {
-					try {
-						taskQueue.wait();
-						System.out.println("running:" + Thread.currentThread().getName());
-					} catch (InterruptedException e) {
-						//e.printStackTrace();
-					}					
-				}
-				r = taskQueue.remove(0);
-			}
-			try {
+		while(running) {	
+			try {							
+				r = taskQueue.remove();				
 				r.run();
-			} catch (Exception e) {
-				//e.printStackTrace();
+			} catch (InterruptedException e) {
+				System.out.println("Task was interrupted");
+				return;
 			}
 		}
-		
 	}
- 
+	
+	public void start() {
+		thread.start();
+		running = true;
+	}
+	
+	public void stop() {
+		thread.interrupt();
+		running = false;
+	}
 }
