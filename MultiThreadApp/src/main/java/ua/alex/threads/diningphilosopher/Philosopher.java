@@ -2,72 +2,60 @@ package ua.alex.threads.diningphilosopher;
 
 import java.util.Random;
 
+public class Philosopher extends Thread {
 
+	public static final int MAX_EAT_TIME = 1000;
+	public static final int MAX_THINK_TIME = 3000;
 
-
-import ua.alex.threads.diningphilosopher.Waiter;
-
-public class Philosopher implements Runnable {
-	
-	private static  Waiter waiter;	
+	private int orderNumber;
+	private Waiter waiter;
+	private FoodFork leftFork;
+	private FoodFork rightFork;
 	private Random random;
-	private String name;
-	
-	public Philosopher(String name) {
-		this.name = name;
+
+	private int eatingCounter = 0;
+	private boolean dining = true;
+
+
+	public Philosopher(int order, FoodFork leftFork, FoodFork rightFork, Waiter waiter) {
 		random = new Random();
+		this.orderNumber = order;
+		this.waiter = waiter;
+		this.leftFork = leftFork;
+		this.rightFork = rightFork;
 	}
-		
+
 	@Override
 	public void run() {
-		while(true) {
-			int randomActionFlag = random.nextInt(100) % 2;			
-			if (waiter.canIEat(this)/* && randomActionFlag == 0*/) {
-				eat();
-				
-			} else {
+		while (dining) {    	
+			try {
 				think();
+				eat();               
+			} catch (InterruptedException e) {
+				return;
 			}
 		}
-
-	}
-	
-	public void eat() {
-		try {
-			Thread.sleep(random.nextInt(Waiter.maximumEatingTime));
-			waiter.startEating(this);
-			System.out.println("eating: " + Thread.currentThread().getName());
-			System.out.println("NOW EATING: " + waiter.eatingPhilosophers());
-		} catch (Exception e) {			
-			//e.printStackTrace();
-		}
-		//waiter.increaseCountEat(this);
-		waiter.finishEating(this);
-	}
-	
-	public void think() {
-		try {
-			Thread.sleep(random.nextInt(Waiter.maximumThinkingTime));
-			//Thread.sleep(100);
-			//System.out.println("thinking: " + Thread.currentThread().getName() + " " + waiter.print());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		}
-	}
-	
-	public static Waiter getWaiter() {
-		return waiter;
 	}
 
-	public static void setWaiter(Waiter waiter) {
-		Philosopher.waiter = waiter;
+	private void think() throws InterruptedException {
+		Thread.sleep(random.nextInt(MAX_THINK_TIME));
 	}
 
-	public String getName() {
-		return name;
+	private void eat() throws InterruptedException {
+		//Trying to take forks, if forks are busy - then wait until they become free
+		waiter.takeForks(orderNumber, leftFork, rightFork);
+		// Eat for a random period of time
+		Thread.sleep(random.nextInt(MAX_EAT_TIME));
+		eatingCounter++;
+		// Put down the forks, forks become available to other philosophers
+		waiter.releaseForks(orderNumber, leftFork, rightFork);
 	}
-	
-	
-	
+
+	public int getEatingCounter() {
+		return eatingCounter;
+	}
+
+	public void stopDinning() {
+		dining = false;
+	}
 }

@@ -1,81 +1,49 @@
 package ua.alex.threads.diningphilosopher;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Waiter {
-	
-	private List<Philosopher> philosophers;
-	private ArrayList<FoodFork> forks;
-	private ArrayList<Boolean> isPhilosophersEating;
-	public static final int SIZE = 5;
-	public static final int maximumEatingTime = 10;
-	public static final int maximumThinkingTime = 20;
-	
-	
-	public Waiter(List<Philosopher> philosophers) {
-		this.philosophers = philosophers;
-		forks = new ArrayList<>(SIZE);
-		isPhilosophersEating = new ArrayList<>(SIZE);
-		for (int i = 0; i < SIZE; i++) {
-			isPhilosophersEating.add(false);
+
+	private String[] state;
+	private final int PHILOSOPHERS_NUMBER;
+
+
+	private void printState() {
+		for (int i = 0; i < PHILOSOPHERS_NUMBER; i++) {
+			System.out.printf("%-10s |" , state[i]);
 		}
-	}
-	
-	
-	public boolean isHungry(Philosopher philosopher) {
-		boolean result = false;		
-		return result;
+		System.out.println();
 	}
 
+	public Waiter(int philosophersNumber) {
+		this.PHILOSOPHERS_NUMBER = philosophersNumber;
+		state = new String[PHILOSOPHERS_NUMBER];
 
-	synchronized public boolean canIEat(Philosopher philosopher) {
-		boolean allowEat = false;
-		int philosopherIndex = philosophers.indexOf(philosopher);
-		boolean leftP = false;
-		boolean rightP = false;
-		
-		if (philosopherIndex == 0) {
-			leftP = isPhilosophersEating.get(philosopherIndex + 1);
-			rightP = isPhilosophersEating.get(SIZE - 1);
-		} else if (philosopherIndex == SIZE - 1) {
-			leftP = isPhilosophersEating.get(0);
-			rightP = isPhilosophersEating.get(philosopherIndex - 1);
-		} else {
-			leftP = isPhilosophersEating.get(philosopherIndex + 1);
-			rightP = isPhilosophersEating.get(philosopherIndex - 1);
+		for (int i = 0; i < PHILOSOPHERS_NUMBER; i++) {            
+			state[i] = "Start";
 		}
-		
-		if (!(leftP || rightP)) {
-			allowEat = true;			
-		}
-		notifyAll();
-		return allowEat;
-	}
-	
-	synchronized public void startEating(Philosopher philosopher) {
-		int philosopherIndex = philosophers.indexOf(philosopher);
-		isPhilosophersEating.set(philosopherIndex, true);
-		notifyAll();
+		printState();
 	}
 
-
-	public void finishEating(Philosopher philosopher) {
-		int philosopherIndex = philosophers.indexOf(philosopher);		
-			isPhilosophersEating.set(philosopherIndex, false);		
-	}
-	
-	public String eatingPhilosophers() {
-		StringBuilder sb = new StringBuilder();
-		for (Boolean b : isPhilosophersEating) {
-			if (b) {
-				sb.append(b.toString().toUpperCase());
-			} else {
-				sb.append(b.toString());
+	public synchronized void takeForks(int id, FoodFork leftFork, FoodFork rightFork) {
+		try{            
+			state[id] = "Wait";
+			while(!leftFork.isFree() || !rightFork.isFree()){
+				wait();
 			}
-			sb.append(" ");
+			// If they are free, take the forks
+			leftFork.setFree(false);
+			rightFork.setFree(false);
+			state[id] = "EAT";
+			printState();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		return sb.toString();
 	}
-	
+
+	public synchronized void releaseForks(int id, FoodFork leftFork, FoodFork rightFork) {       
+		state[id] = "Think";
+		leftFork.setFree(true);
+		rightFork.setFree(true);
+		printState();
+		notifyAll();
+	}
 }
